@@ -18,76 +18,83 @@ var web3 = new Web3();
 
 
 //Support Functions
-module.exports = function (){
+module.exports = function() {
 
     this.ContractInstance;
 
-    this.setProvider = function (provider){
+    this.setWeb3 = function(web3) {
+        this.web3 = web3;
+    }
+
+    this.setWsProvider = function(wsProviderAddress) {
+        web3.setProvider(new web3.providers.WebsocketProvider(wsProviderAddress));
+    }
+
+    this.setProvider = function(provider) {
         web3.setProvider(new web3.providers.HttpProvider(provider));
     }
 
-    this.createContractInstance = function (contractABI,contractAddress){
+    this.createContractInstance = function(contractABI, contractAddress) {
         var _contract = web3.eth.contract(contractABI);
         this.ContractInstance = _contract.at(contractAddress);
     }
 
-    this.encodeFunctionParams = function(methodName, types, args){
-        var fullName = methodName +  '(' + types.join() + ')';
+    this.encodeFunctionParams = function(methodName, types, args) {
+        var fullName = methodName + '(' + types.join() + ')';
 
-        var signature = CryptoJS.SHA3(fullName,{outputLength:256}).toString(CryptoJS.enc.Hex).slice(0, 8);
-        var dataHex = signature  + coder.encodeParams(types, args);
-        var payload = '0x'+dataHex;
+        var signature = CryptoJS.SHA3(fullName, { outputLength: 256 }).toString(CryptoJS.enc.Hex).slice(0, 8);
+        var dataHex = signature + coder.encodeParams(types, args);
+        var payload = '0x' + dataHex;
 
         return payload;
     }
 
-    this.encodeConstructorParams = function (abi, params) {
-        return abi.filter(function (json) {
+    this.encodeConstructorParams = function(abi, params) {
+        return abi.filter(function(json) {
             return json.type === 'constructor' && json.inputs.length === params.length;
-        }).map(function (json) {
-            return json.inputs.map(function (input) {
+        }).map(function(json) {
+            return json.inputs.map(function(input) {
                 return input.type;
             });
-        }).map(function (types) {
+        }).map(function(types) {
             return coder.encodeParams(types, params);
         })[0] || '';
     };
 
-    this.getSignedTransaction = function(txnRawData, pvtKey){
+    this.getSignedTransaction = function(txnRawData, pvtKey) {
         var tx = new Tx(txnRawData);
         tx.sign(pvtKey);
-        var serializedTx = '0x'+ tx.serialize().toString('hex');
+        var serializedTx = '0x' + tx.serialize().toString('hex');
 
         return serializedTx;
     }
 
     this.createNewAccount = async function(callback) {
         var retObj = await account.create();
-        var str = "Create Acc      : \n"
-          + "   hash         : " + retObj.address + "\n"
-          + "   private key  : " + retObj.privateKey;
+        var str = "Create Acc      : \n" +
+            "   hash         : " + retObj.address + "\n" +
+            "   private key  : " + retObj.privateKey;
         console.log(str);
 
-        callback({"status":1,"functionName":"createNewAccount","message":retObj});
+        callback({ "status": 1, "functionName": "createNewAccount", "message": retObj });
     }
 
-    this.invokeSendRawTransaction = async function (functionName, transactionPayload, callback){
+    this.invokeSendRawTransaction = async function(functionName, transactionPayload, callback) {
         await web3.eth.sendRawTransaction(transactionPayload, function(error, txHash) {
-            if(!error){
-                callback({"status":1,"functionName":functionName,"message":txHash});
-            }
-            else{
-                callback({"status":0,"functionName":functionName,"message":error});
+            if (!error) {
+                callback({ "status": 1, "functionName": functionName, "message": txHash });
+            } else {
+                callback({ "status": 0, "functionName": functionName, "message": error });
             }
         });
     }
 
-    this.invokeGetTxnReceipt = async function (tx_hash, callback){
+    this.invokeGetTxnReceipt = async function(tx_hash, callback) {
         var e = await web3.eth.getTransaction(tx_hash);
-        callback({"status":1,"invokeGetTxnReceipt":"invokeGetTxnReceipt","message":e});
+        callback({ "status": 1, "invokeGetTxnReceipt": "invokeGetTxnReceipt", "message": e });
     }
 
-    this.getDefaultTxnAttributes = function (nonce,fromAddress, toAddress, valueInEther,dataAsHex, gasLimit, gasPrice){
+    this.getDefaultTxnAttributes = function(nonce, fromAddress, toAddress, valueInEther, dataAsHex, gasLimit, gasPrice) {
 
         var TxnAttributes = {
             nonce: '0x00',
