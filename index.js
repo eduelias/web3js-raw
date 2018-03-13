@@ -14,7 +14,7 @@ var Tx = require('ethereumjs-tx');
 var coder = require('web3/lib/solidity/coder');
 var CryptoJS = require('crypto-js');
 
-var web3 = new Web3();
+var web3 = this.web3 || new Web3();
 
 
 //Support Functions
